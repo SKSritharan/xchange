@@ -8,8 +8,9 @@
                 </p>
             </div>
 
-            <div class="flex items-center mt-4 md:mt-0">
-                <div class="relative mr-4">
+            <div class="flex items-center mt-4 md:mt-0 space-x-4">
+                <!-- Currency Selector -->
+                <div class="relative">
                     <select
                         v-model="selectedCurrency"
                         class="input-field pr-10 pl-10 appearance-none"
@@ -21,6 +22,34 @@
                     <ArrowDownUp :size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/>
                 </div>
 
+                <!-- Date Picker -->
+                <div class="relative">
+                    <VueDatePicker
+                        v-model="selectedDate"
+                        :max-date="today"
+                        :enable-time-picker="false"
+                        input-class-name="input-field w-full"
+                        placeholder="Select date"
+                        aria-label="Select date"
+                    >
+                        <template #trigger>
+                            <div class="relative">
+                                <input
+                                    :value="selectedDate ? formatDate(selectedDate) : ''"
+                                    placeholder="Select date"
+                                    class="input-field w-full cursor-pointer"
+                                    readonly
+                                />
+                                <Calendar
+                                    :size="18"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                                />
+                            </div>
+                        </template>
+                    </VueDatePicker>
+                </div>
+
+                <!-- Refresh Button -->
                 <button
                     @click="refetch"
                     class="btn-secondary flex items-center space-x-2"
@@ -32,35 +61,37 @@
             </div>
         </div>
 
-        <!-- Currency Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <CurrencyCard
-                v-for="currency in availableCurrencies"
-                :key="currency"
-                :currency="currency"
-                :base-currency="BASE_CURRENCY"
-                :rate="currentRates[currency] || 0"
-                :change="changePercentages[currency] || 0"
-                :weekly-average="weeklyAverages[currency] || 0"
-            />
+        <!-- Currency Card and Trend Chart -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="md:col-span-1">
+                <CurrencyCard
+                    :currency="selectedCurrency"
+                    :base-currency="BASE_CURRENCY"
+                    :rate="currentRate"
+                    :weekly-average="weeklyAverage"
+                />
+            </div>
+            <div class="md:col-span-2">
+                <TrendChart
+                    :data="historicalData"
+                    :currency="selectedCurrency"
+                    :base-currency="BASE_CURRENCY"
+                    :is-loading="isLoading"
+                />
+            </div>
         </div>
 
-        <!-- Chart Section -->
-        <div class="grid grid-cols-1 gap-6">
-            <TrendChart
-                :data="historicalData[selectedCurrency] || []"
-                :currency="selectedCurrency"
-                :base-currency="BASE_CURRENCY"
-                :is-loading="isLoading"
-            />
+        <!-- Error Message -->
+        <div v-if="error" class="mt-4 text-red-500 text-center">
+            {{ error }}
         </div>
     </main>
 </template>
 
 <script setup>
 import {ref} from 'vue';
-import {ArrowDownUp, RefreshCw} from 'lucide-vue-next';
-import Navigation from '../components/Navigation.vue';
+import VueDatePicker from '@vuepic/vue-datepicker';
+import {ArrowDownUp, RefreshCw, Calendar} from 'lucide-vue-next';
 import CurrencyCard from '../components/CurrencyCard.vue';
 import TrendChart from '../components/TrendChart.vue';
 import {useCurrencyData} from '../hooks/useCurrencyData';
@@ -71,6 +102,17 @@ const BASE_CURRENCY = 'USD';
 
 // State
 const selectedCurrency = ref('LKR');
-const {isLoading, currentRates, historicalData, weeklyAverages, changePercentages, refetch} =
-    useCurrencyData(availableCurrencies, BASE_CURRENCY);
+const today = new Date();
+const selectedDate = ref(today); // Default to today
+
+// Format date for display
+const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+};
+
+// Fetch data using the hook
+const {isLoading, currentRate, historicalData, weeklyAverage, error, refetch} =
+    useCurrencyData(selectedCurrency, selectedDate);
 </script>

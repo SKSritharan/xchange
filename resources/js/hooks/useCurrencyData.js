@@ -1,52 +1,97 @@
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import axios from 'axios';
+import { useToast } from './useToast';
 
-export function useCurrencyData(currencies, baseCurrency) {
+export function useCurrencyData(selectedCurrency, date) {
     const isLoading = ref(false);
-    const currentRates = ref({});
-    const historicalData = ref({});
-    const weeklyAverages = ref({});
-    const changePercentages = ref({});
+    const currentRate = ref(0);
+    const weeklyAverage = ref(0);
+    const historicalData = ref([]);
+    const error = ref(null);
 
-    const fetchData = async () => {
+    const { toast } = useToast();
+
+    const fetchData = async (currency, fetchDate) => {
         isLoading.value = true;
+        error.value = null;
+
         try {
-            const promises = currencies.map(async (currency) => {
-                const response = await axios.get('/api/v1/exchange-rates', {
-                    params: { currency, date: new Date().toISOString().split('T')[0] },
-                });
-                const data = response.data.data;
-                return { currency, data };
+            // Format the date as DD-MM-YYYY
+            const formatDateForApi = (d) => {
+                const date = new Date(d);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`;
+            };
+
+            const formattedDate = formatDateForApi(fetchDate);
+
+            // Fetch data from the API
+            const response = await axios.get(`http://xchange.test/api/v1/exchange-rates`, {
+                params: {
+                    currency: currency,
+                    date: formattedDate,
+                },
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('xchange_token')}`,
+                },
             });
 
-            const results = await Promise.all(promises);
+            const { data } = response.data;
 
-            results.forEach(({ currency, data }) => {
-                currentRates.value[currency] = data.current_rate;
-                historicalData.value[currency] = data.last_7_days;
-                weeklyAverages.value[currency] = data.weekly_average;
+            // Set the current rate
+            currentRate.value = data.current_rate || 0;
 
-                // Calculate change percentage (mocked for now; adjust based on your API)
-                const lastRate = data.last_7_days[data.last_7_days.length - 2]?.rate || data.current_rate;
-                const change = ((data.current_rate - lastRate) / lastRate) * 100;
-                changePercentages.value[currency] = change;
+            // Set the weekly average
+            weeklyAverage.value = data.weekly_average || 0;
+
+            // Set the historical data for the chart (last 7 days)
+            // Filter out invalid entries
+            historicalData.value = data.last_7_days
+                .filter(entry => entry.rate != null && !isNaN(entry.rate))
+                .map(entry => ({
+                    date: entry.date,
+                    rate: entry.rate,
+                }));
+        } catch (err) {
+            error.value = err.response?.data?.message || 'Failed to fetch currency data';
+            console.error('Error fetching currency data:', err);
+
+            currentRate.value = 0;
+            weeklyAverage.value = 0;
+            historicalData.value = [];
+
+            toast({
+                title: 'Error',
+                description: error.value,
+                variant: 'destructive',
             });
-        } catch (error) {
-            console.error('Failed to fetch currency data:', error);
         } finally {
             isLoading.value = false;
         }
     };
 
-    // Initial fetch
-    fetchData();
+    // Fetch data initially and whenever the selected currency or date changes
+    watch([selectedCurrency, date], ([newCurrency, newDate]) => {
+        if (newCurrency && newDate) {
+            fetchData(newCurrency, newDate);
+        }
+    }, { immediate: true });
+
+    // Refetch function to manually refresh data
+    const refetch = () => {
+        if (selectedCurrency.value && date.value) {
+            fetchData(selectedCurrency.value, date.value);
+        }
+    };
 
     return {
         isLoading,
-        currentRates,
+        currentRate,
+        weeklyAverage,
         historicalData,
-        weeklyAverages,
-        changePercentages,
-        refetch: fetchData,
+        error,
+        refetch,
     };
 }
