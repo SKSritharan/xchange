@@ -97,10 +97,10 @@
             <!-- Submit Button -->
             <button
                 type="submit"
-                :disabled="isSubmitting || rateError || dateError"
+                :disabled="isSubmitting"
                 :class="[
           'btn-primary w-full mt-6',
-          isSubmitting || rateError || dateError ? 'opacity-70 cursor-not-allowed' : ''
+          isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
         ]"
             >
         <span v-if="isSubmitting" class="flex items-center justify-center">
@@ -121,7 +121,7 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import { Calendar, Info } from 'lucide-vue-next';
 import { useToast } from '../hooks/useToast';
@@ -148,17 +148,25 @@ const errorMessage = ref('');
 
 const { toast } = useToast();
 
-// Format Date for Display
+// Format Date for Display and API Submission
 const formatDate = (date) => {
     if (!date) return '';
-    const d = new Date(date);
-    return d.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    try {
+        const d = new Date(date);
+        if (isNaN(d.getTime())) throw new Error('Invalid date');
+        return d.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    } catch (error) {
+        console.error('Date formatting error:', error);
+        return '';
+    }
 };
 
 // Validation Functions
 const validateRate = () => {
     rateError.value = '';
-    if (form.rate <= 0) {
+    if (form.rate === null || form.rate === '') {
+        rateError.value = 'Exchange rate is required';
+    } else if (form.rate <= 0) {
         rateError.value = 'Please enter a positive rate value';
     } else if (form.rate < 0.0001) {
         rateError.value = 'Rate must be at least 0.0001';
@@ -169,15 +177,41 @@ const validateRate = () => {
 
 const validateDate = () => {
     dateError.value = '';
+    if (!form.date) {
+        dateError.value = 'Please select a date';
+        return;
+    }
     const selectedDate = new Date(form.date);
+    if (isNaN(selectedDate.getTime())) {
+        dateError.value = 'Invalid date selected';
+        form.date = today;
+        return;
+    }
     if (selectedDate > today) {
         dateError.value = 'Date cannot be in the future';
         form.date = today;
     }
 };
 
+// Watch for changes in props.currencies to update form.currency
+watch(() => props.currencies, (newCurrencies) => {
+    if (newCurrencies && newCurrencies.length > 0 && !newCurrencies.includes(form.currency)) {
+        form.currency = newCurrencies[0];
+    }
+});
+
+// Watch form fields to trigger validation on change
+watch(() => form.rate, () => {
+    validateRate();
+});
+
+watch(() => form.date, () => {
+    validateDate();
+});
+
 // Form Submission
 const handleSubmit = async () => {
+
     // Reset feedback messages
     successMessage.value = '';
     errorMessage.value = '';
@@ -185,24 +219,32 @@ const handleSubmit = async () => {
     // Validate before submission
     validateRate();
     validateDate();
+
     if (rateError.value || dateError.value) {
+        console.log('Validation errors:', { rateError: rateError.value, dateError: dateError.value });
         return;
     }
 
     isSubmitting.value = true;
 
     try {
-        await axios.post('/api/v1/exchange-rates', {
+        const payload = {
             currency: form.currency,
-            rate: form.rate,
-            date: formatDate(form.date), // Convert Date object to YYYY-MM-DD string
+            rate: parseFloat(form.rate.toFixed(4)), // Ensure 4 decimal places
+            date: formatDate(form.date),
+        };
+
+        const response = await axios.post('/api/v1/exchange-rates', payload, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('xchange_token')}`,
+            },
         });
-        successMessage.value = 'Exchange rate data has been submitted';
+
+        successMessage.value = response.data.message || 'Exchange rate data has been submitted';
         toast({
             title: 'Success',
-            description: 'Exchange rate data has been submitted',
+            description: successMessage.value,
         });
-        // Reset rate but keep currency and date
         form.rate = null;
     } catch (error) {
         errorMessage.value = error.response?.data?.message || 'Failed to submit exchange rate data';
@@ -218,8 +260,5 @@ const handleSubmit = async () => {
 </script>
 
 <style scoped>
-/* Ensure the tooltip is hidden on mobile by default and only shows on hover */
-.group:hover .group-hover\:opacity-100 {
-    opacity: 1;
-}
+
 </style>

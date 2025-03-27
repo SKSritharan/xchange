@@ -140,6 +140,34 @@
     filter: drop-shadow(0 0 2em #646cffaa);
 }
 
+/* Ensure the tooltip is hidden on mobile by default and only shows on hover */
+.group:hover .group-hover\:opacity-100 {
+    opacity: 1;
+}
+
+/* Customize VueDatePicker to match the app's design */
+.dp__theme_light {
+    --dp-background-color: hsl(var(--card));
+    --dp-text-color: hsl(var(--foreground));
+    --dp-hover-color: hsl(var(--muted));
+    --dp-hover-text-color: hsl(var(--foreground));
+    --dp-primary-color: hsl(var(--primary));
+    --dp-border-color: hsl(var(--border));
+    --dp-menu-border-color: hsl(var(--border));
+    --dp-border-color-hover: hsl(var(--primary));
+    --dp-font-family: 'Montserrat', sans-serif;
+}
+
+.dp__input {
+    @apply input-field w-full;
+}
+
+.dp__menu {
+    @apply rounded-lg shadow-lg border border-border;
+    backdrop-filter: blur(10px);
+    background: hsla(var(--card)/0.8);
+}
+
 @keyframes logo-spin {
     from {
         transform: rotate(0deg);
