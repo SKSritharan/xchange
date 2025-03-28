@@ -14,6 +14,6 @@ Route::prefix('v1')
         Route::controller(ExchangeRateController::class)
             ->group(function () {
                 Route::get('exchange-rates', 'getRates');
-                Route::post('exchange-rates', 'storeRate');
+                Route::post('exchange-rates', 'storeRate')->middleware('auth:sanctum');
             });
     });
