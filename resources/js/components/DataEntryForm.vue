@@ -125,7 +125,7 @@ import { reactive, ref, watch } from 'vue';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import { Calendar, Info } from 'lucide-vue-next';
 import { useToast } from '../hooks/useToast';
-import axios from 'axios';
+import apiClient from '../support/apiClient';
 
 // Props
 const props = defineProps({
@@ -234,7 +234,7 @@ const handleSubmit = async () => {
             date: formatDate(form.date),
         };
 
-        const response = await axios.post('/api/v1/exchange-rates', payload, {
+        const response = await apiClient.post('/exchange-rates', payload, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('xchange_token')}`,
             },

@@ -1,6 +1,6 @@
 import { ref, watch } from 'vue';
-import axios from 'axios';
 import { useToast } from './useToast';
+import apiClient from '../support/apiClient';
 
 export function useCurrencyData(selectedCurrency, date) {
     const isLoading = ref(false);
@@ -28,13 +28,10 @@ export function useCurrencyData(selectedCurrency, date) {
             const formattedDate = formatDateForApi(fetchDate);
 
             // Fetch data from the API
-            const response = await axios.get(`http://xchange.test/api/v1/exchange-rates`, {
+            const response = await apiClient.get(`/exchange-rates`, {
                 params: {
                     currency: currency,
                     date: formattedDate,
-                },
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('xchange_token')}`,
                 },
             });
 

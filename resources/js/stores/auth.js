@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import axios from 'axios';
+import apiClient from '../support/apiClient';
 import { useRouter } from 'vue-router';
 import { useToast } from '../hooks/useToast';
 
@@ -14,7 +14,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post('/api/v1/login', { email, password });
+            const response = await apiClient.post('/login', { email, password });
             const { token, email: userEmailValue } = response.data;
             localStorage.setItem('xchange_token', token);
             localStorage.setItem('xchange_email', userEmailValue);
@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const register = async (name, email, password, passwordConfirmation) => {
         try {
-            const response = await axios.post('/api/v1/register', {
+            const response = await apiClient().post('/register', {
                 name,
                 email,
                 password,
@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     const logout = async () => {
         try {
-            await axios.post('/api/v1/logout', {}, {
+            await apiClient.post('/logout', {}, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('xchange_token')}`,
                 },
@@ -95,7 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
     };
 
     // Add Axios interceptor to handle 401 errors
-    axios.interceptors.response.use(
+    apiClient.interceptors.response.use(
         response => response,
         error => {
             if (error.response?.status === 401) {
