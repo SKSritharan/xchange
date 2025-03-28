@@ -38,14 +38,14 @@ export function useCurrencyData(selectedCurrency, date) {
             const { data } = response.data;
 
             // Set the current rate
-            currentRate.value = data.current_rate || 0;
+            currentRate.value = data['current_rate'] || 0;
 
             // Set the weekly average
-            weeklyAverage.value = data.weekly_average || 0;
+            weeklyAverage.value = data['weekly_average'] || 0;
 
             // Set the historical data for the chart (last 7 days)
             // Filter out invalid entries
-            historicalData.value = data.last_7_days
+            historicalData.value = data['last_7_days']
                 .filter(entry => entry.rate != null && !isNaN(entry.rate))
                 .map(entry => ({
                     date: entry.date,
