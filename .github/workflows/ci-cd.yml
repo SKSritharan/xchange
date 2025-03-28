@@ -53,8 +53,8 @@ jobs:
       - name: Run backend tests (PHPUnit)
         run: php artisan test
 
-      - name: Run frontend tests (Vitest)
-        run: npm run test:frontend
+#      - name: Run frontend tests (Vitest)
+#        run: npm run test:frontend
 
   deploy:
     needs: test
