@@ -1,3 +1,184 @@
+/* Import Montserrat Font */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&display=swap');
+
+/* Import Vue Datepicker CSS */
+@import '@vuepic/vue-datepicker/dist/main.css';
+
+/* Import Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*Custom Variables and Base Styles */
+@layer base {
+    :root {
+        --background: 210 40% 98%;
+        --foreground: 222 47% 11%;
+
+        --card: 0 0% 100%;
+        --card-foreground: 222 47% 11%;
+
+        --popover: 0 0% 100%;
+        --popover-foreground: 222 47% 11%;
+
+        --primary: 196 80% 45%;
+        --primary-foreground: 210 40% 98%;
+
+        --secondary: 160 84% 39%;
+        --secondary-foreground: 210 40% 98%;
+
+        --muted: 210 40% 96%;
+        --muted-foreground: 215 16% 47%;
+
+        --accent: 190 80% 50%;
+        --accent-foreground: 210 40% 98%;
+
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 210 40% 98%;
+
+        --border: 214 32% 91%;
+        --input: 214 32% 91%;
+        --ring: 222 84% 48%;
+
+        --radius: 0.75rem;
+
+        /* Sidebar variables */
+        --sidebar-background: 0 0% 98%;
+        --sidebar-foreground: 240 5% 26%;
+        --sidebar-primary: 240 6% 10%;
+        --sidebar-primary-foreground: 0 0% 98%;
+        --sidebar-accent: 240 5% 96%;
+        --sidebar-accent-foreground: 240 6% 10%;
+        --sidebar-border: 220 13% 91%;
+        --sidebar-ring: 217 91% 60%;
+    }
+
+    * {
+        @apply border-border;
+    }
+
+    html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        @apply antialiased;
+    }
+}
+
+/* Custom Component Classes */
+@layer components {
+    .card-glass {
+        @apply bg-white/70 backdrop-blur-md border border-white/30 rounded-xl shadow-sm;
+    }
+
+    .btn-primary {
+        @apply bg-primary text-primary-foreground rounded-full px-6 py-2.5 font-medium shadow-sm
+        transition-all duration-200 hover:shadow-md active:scale-[0.98];
+    }
+
+    .btn-secondary {
+        @apply bg-secondary text-secondary-foreground rounded-full px-6 py-2.5 font-medium shadow-sm
+        transition-all duration-200 hover:shadow-md active:scale-[0.98];
+    }
+
+    .input-field {
+        @apply rounded-lg border border-border bg-white/50 px-4 py-2.5 text-foreground shadow-sm
+        placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary;
+    }
+
+    .page-transition {
+        @apply animate-fade-in;
+    }
+
+    .currency-value {
+        @apply font-semibold tracking-tight;
+    }
+
+    .currency-trend-up {
+        @apply text-green-500;
+    }
+
+    .currency-trend-down {
+        @apply text-red-500;
+    }
+}
+
+/* Animations*/
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+}
+
+#app {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.logo {
+    height: 6em;
+    padding: 1.5em;
+    will-change: filter;
+    transition: filter 300ms;
+}
+
+.logo:hover {
+    filter: drop-shadow(0 0 2em #646cffaa);
+}
+
+/* Ensure the tooltip is hidden on mobile by default and only shows on hover */
+.group:hover .group-hover\:opacity-100 {
+    opacity: 1;
+}
+
+/* Customize VueDatePicker to match the app's design */
+.dp__theme_light {
+    --dp-background-color: hsl(var(--card));
+    --dp-text-color: hsl(var(--foreground));
+    --dp-hover-color: hsl(var(--muted));
+    --dp-hover-text-color: hsl(var(--foreground));
+    --dp-primary-color: hsl(var(--primary));
+    --dp-border-color: hsl(var(--border));
+    --dp-menu-border-color: hsl(var(--border));
+    --dp-border-color-hover: hsl(var(--primary));
+    --dp-font-family: 'Montserrat', sans-serif;
+}
+
+.dp__input {
+    @apply input-field w-full;
+}
+
+.dp__menu {
+    @apply rounded-lg shadow-lg border border-border;
+    backdrop-filter: blur(10px);
+    background: hsla(var(--card)/0.8);
+}
+
+@keyframes logo-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    a:nth-of-type(2) .logo {
+        animation: logo-spin infinite 20s linear;
+    }
+}
