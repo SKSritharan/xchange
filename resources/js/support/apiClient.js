@@ -8,7 +8,7 @@ const apiClient = axios.create({
     headers: {
         Authorization: `Bearer ${localStorage.getItem('xchange_token')}`,
         Accept: 'application/json',
-        ContentType: "application/json"
+        ContentType: 'application/json'
     },
 });
 
